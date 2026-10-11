@@ -87,7 +87,9 @@ CLAN_ID = "3105631591"
 AUTO_JOIN_CLAN = True
 
 # ==================== HARDCODED ACCOUNTS ====================
+# ==================== HARDCODED ACCOUNTS ====================
 HARDCODED_ACCOUNTS = [
+    # ── Batch 1 (10) ──
     {"uid": "4278586807", "password": "SPEED_X_F63NA_BY_SPIDEERIO_GAMING_U8X4M"},
     {"uid": "4278586797", "password": "SPEED_X_PBN8R_BY_SPIDEERIO_GAMING_NSTMP"},
     {"uid": "4278586802", "password": "SPEED_X_BCOIS_BY_SPIDEERIO_GAMING_HLNM0"},
@@ -96,9 +98,56 @@ HARDCODED_ACCOUNTS = [
     {"uid": "4278587254", "password": "SPEED_X_JTY7D_BY_SPIDEERIO_GAMING_X0MBF"},
     {"uid": "4278587281", "password": "SPEED_X_CPIDU_BY_SPIDEERIO_GAMING_O95ZY"},
     {"uid": "4278587305", "password": "SPEED_X_O3348_BY_SPIDEERIO_GAMING_2VSB4"},
+    {"uid": "4278587279", "password": "SPEED_X_IAOG2_BY_SPIDEERIO_GAMING_O87X9"},
+    {"uid": "4278587409", "password": "SPEED_X_M6I7B_BY_SPIDEERIO_GAMING_7R2QP"},
+    # ── Batch 2 (10) ──
+    {"uid": "4278587542", "password": "SPEED_X_VRDGZ_BY_SPIDEERIO_GAMING_7TS70"},
+    {"uid": "4278587596", "password": "SPEED_X_ZK11T_BY_SPIDEERIO_GAMING_EBY8C"},
+    {"uid": "4278587603", "password": "SPEED_X_7QCX9_BY_SPIDEERIO_GAMING_48M3Z"},
+    {"uid": "4278587642", "password": "SPEED_X_11TBW_BY_SPIDEERIO_GAMING_H0FO0"},
+    {"uid": "4278587660", "password": "SPEED_X_RPILV_BY_SPIDEERIO_GAMING_J1MQK"},
+    {"uid": "4278587720", "password": "SPEED_X_LPRRP_BY_SPIDEERIO_GAMING_Q2NK2"},
+    {"uid": "4278587809", "password": "SPEED_X_FP4T9_BY_SPIDEERIO_GAMING_HV6M6"},
+    {"uid": "4278587836", "password": "SPEED_X_2X15C_BY_SPIDEERIO_GAMING_EQLPF"},
+    {"uid": "4278587901", "password": "SPEED_X_2LXPI_BY_SPIDEERIO_GAMING_BRJZM"},
+    {"uid": "4278587920", "password": "SPEED_X_FECQ9_BY_SPIDEERIO_GAMING_1SV47"},
+    # ── Batch 3 (10) ──
+    {"uid": "4278588058", "password": "SPEED_X_V1HXE_BY_SPIDEERIO_GAMING_IA6MB"},
+    {"uid": "4278588073", "password": "SPEED_X_TV7F9_BY_SPIDEERIO_GAMING_8QRYQ"},
+    {"uid": "4278588142", "password": "SPEED_X_BAFRQ_BY_SPIDEERIO_GAMING_Z1D2S"},
+    {"uid": "4278588156", "password": "SPEED_X_M2DP6_BY_SPIDEERIO_GAMING_CP5MY"},
+    {"uid": "4278588192", "password": "SPEED_X_ITBQG_BY_SPIDEERIO_GAMING_TB8WF"},
+    {"uid": "4278588951", "password": "SPEED_X_H54DL_BY_SPIDEERIO_GAMING_STGJI"},
+    {"uid": "4278589105", "password": "SPEED_X_KFU7O_BY_SPIDEERIO_GAMING_MMPVS"},
+    {"uid": "4278589048", "password": "SPEED_X_GT183_BY_SPIDEERIO_GAMING_9Y20G"},
+    {"uid": "4278589098", "password": "SPEED_X_9YZRJ_BY_SPIDEERIO_GAMING_KXMZM"},
     {"uid": "4278588984", "password": "SPEED_X_YSE0K_BY_SPIDEERIO_GAMING_4B2PG"},
+    # ── Batch 4 (10) ──
+    {"uid": "4278589536", "password": "SPEED_X_VR7MX_BY_SPIDEERIO_GAMING_ZKEP8"},
+    {"uid": "4278589580", "password": "SPEED_X_97EFV_BY_SPIDEERIO_GAMING_KLPF5"},
+    {"uid": "4278589558", "password": "SPEED_X_PB1FW_BY_SPIDEERIO_GAMING_9CLDX"},
+    {"uid": "4278589582", "password": "SPEED_X_L3K8X_BY_SPIDEERIO_GAMING_VKBEV"},
+    {"uid": "4278589730", "password": "SPEED_X_ZFTHA_BY_SPIDEERIO_GAMING_IH2H9"},
+    {"uid": "4278589825", "password": "SPEED_X_U3QOI_BY_SPIDEERIO_GAMING_FKMZY"},
+    {"uid": "4278589855", "password": "SPEED_X_9RT1A_BY_SPIDEERIO_GAMING_Z9I4G"},
+    {"uid": "4278589881", "password": "SPEED_X_MELWM_BY_SPIDEERIO_GAMING_YOMYQ"},
+    {"uid": "4278589932", "password": "SPEED_X_HXXJC_BY_SPIDEERIO_GAMING_ZJOFS"},
+    {"uid": "4278589948", "password": "SPEED_X_QLQ24_BY_SPIDEERIO_GAMING_25V7B"},
+    # ── Batch 5 (10) ──
+    {"uid": "4278590035", "password": "SPEED_X_FAQHH_BY_SPIDEERIO_GAMING_2IVL8"},
+    {"uid": "4278590092", "password": "SPEED_X_QEXIF_BY_SPIDEERIO_GAMING_3JTZQ"},
+    {"uid": "4278590098", "password": "SPEED_X_J136Q_BY_SPIDEERIO_GAMING_NZ0EP"},
+    {"uid": "4278590158", "password": "SPEED_X_PJ8UQ_BY_SPIDEERIO_GAMING_TCLQY"},
+    {"uid": "4278590183", "password": "SPEED_X_41UN2_BY_SPIDEERIO_GAMING_62BX7"},
+    {"uid": "4278590261", "password": "SPEED_X_VNPL0_BY_SPIDEERIO_GAMING_CV8YG"},
+    {"uid": "4278590323", "password": "SPEED_X_DXFGM_BY_SPIDEERIO_GAMING_SPAQC"},
+    {"uid": "4278590466", "password": "SPEED_X_SH6LK_BY_SPIDEERIO_GAMING_0IXJ1"},
+    {"uid": "4278590494", "password": "SPEED_X_OXD7Q_BY_SPIDEERIO_GAMING_N7UML"},
+    {"uid": "4278590475", "password": "SPEED_X_E66Z2_BY_SPIDEERIO_GAMING_XEG6S"},
+    # ── Batch 6 (2) ──
+    {"uid": "4278590477", "password": "SPEED_X_3AHBE_BY_SPIDEERIO_GAMING_30MQ8"},
+    {"uid": "4278590564", "password": "SPEED_X_ICI8M_BY_SPIDEERIO_GAMING_2ALRL"},
 ]
-
 # ==================== PER-ACCOUNT TEAM STATE ====================
 _TEAM_STATES: Dict[str, Dict[str, Any]] = {}
 _TEAM_STATE_LOCK = asyncio.Lock()
