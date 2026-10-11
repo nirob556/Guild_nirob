@@ -1916,7 +1916,6 @@ async def play_game(server_ip_port, thunder, sharma, udp_key, match_code,
                         print_warning(f"[MATCH #{match_index}] Handshake timeout")
                         break
                 elif ack_state == "thunder_sharma_sent":
-                    # extended silence exit only
                     if (time.time() - last_activity) > MATCH_SILENCE_EXIT:
                         print_warning(f"[MATCH #{match_index}] silence {MATCH_SILENCE_EXIT}s — exit")
                         completed_cleanly = True
@@ -2487,12 +2486,10 @@ async def functional_lone_wolf(addrs, starter_packet, account_region, client_ver
                                 print_info(f"[OFFLINE] Match #{match_index} ended — next in {NEW_MATCH_DELAY}s...")
                                 await asyncio.sleep(NEW_MATCH_DELAY)
 
-                                # reset team state for this bot
                                 local_team_state["team_code"] = None
                                 local_team_state["group_id"] = None
                                 local_team_state["match_started"] = False
 
-                                # cancel old tasks
                                 for tk in (team_coord_task, member_trigger_task):
                                     if tk and not tk.done():
                                         tk.cancel()
@@ -2501,11 +2498,10 @@ async def functional_lone_wolf(addrs, starter_packet, account_region, client_ver
                                         except asyncio.CancelledError:
                                             pass
 
-                                # restart fresh squad formation
                                 team_coord_task = asyncio.create_task(_team_coordinator())
                                 member_trigger_task = asyncio.create_task(_member_match_trigger())
                                 print_success(f"[TEAM] 🔁 re-squad started after match #{match_index}")
-                                continue  # loop back
+                                continue
                         except Exception as e:
                             print_warning(f"[MATCH] {e}")
                             continue
@@ -2740,7 +2736,9 @@ async def process_account_uid_pass(uid: str, password: str) -> Optional[Dict]:
                     return res_json[key]
                 if isinstance(v, dict):
                     return v.get("data")
-                return None            acc_id_raw = _get_data(1)
+                return None
+
+            acc_id_raw = _get_data(1)
             region_raw = _get_data(2) or "BD"
             jwt_token = _get_data(8)
             server_url_raw = _get_data(10)
@@ -3107,7 +3105,6 @@ async def main():
     else:
         print_success(f"[✓] Loaded {len(accounts)} accounts")
 
-    # Pre-assign groups sorted by uid — deterministic
     sorted_accounts = sorted(accounts, key=lambda a: str(a.get("uid", "")))
     for acc in sorted_accounts:
         uid = str(acc.get("uid", "")).strip()
@@ -3115,7 +3112,6 @@ async def main():
             g = await _assign_group(uid)
             print_info(f"[TEAM] pre-assigned {uid} → group {g}")
 
-    # parallel start — all bots log in fast
     startup_tasks = []
     for acc in accounts:
         if "token" in acc and acc["token"]:
@@ -3128,7 +3124,7 @@ async def main():
             t = asyncio.create_task(account_loop_guest(u, acc["password"]))
             bot_state.account_workers[u] = t
             startup_tasks.append(t)
-        await asyncio.sleep(0.15)  # tiny stagger to avoid Garena login rate-limit
+        await asyncio.sleep(0.15)
 
     try:
         while True:
