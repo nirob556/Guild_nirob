@@ -56,8 +56,9 @@ TOKEN_CACHE_TTL = 1200
 
 START_MATCH_INTERVAL = 4.0
 NEW_MATCH_DELAY = 3.0
-MAX_MATCH_DURATION = 800
-MATCH_IDLE_TIMEOUT = 15.0
+MAX_MATCH_DURATION = 1800            # 30 min — ম্যাচে মৃত্যু/শেষ পর্যন্ত থাকবে
+MATCH_IDLE_TIMEOUT = 60.0            # idle 60s
+MATCH_SILENCE_EXIT = 120.0           # silence 120s — ম্যাচ থেকে বের
 MAX_CONCURRENT_MATCHES = 1
 
 FALLBACK_UID = ""
@@ -68,7 +69,7 @@ DEBUG_ALL_PACKETS = False
 
 # ==================== TEAM / SQUAD MODE ====================
 TEAM_MODE = True
-TEAM_SIZE = 4                        # প্রতি squad-এ ৪ জন
+TEAM_SIZE = 4
 TEAM_READY_DELAY = 2.5
 TEAM_INVITE_WAIT = 1.5
 TEAM_MEMBER_TRIGGER_DELAY = 10.0
@@ -76,13 +77,14 @@ TEAM_MATCH_LOOP_COUNT = 60
 TEAM_MATCH_LOOP_INTERVAL = 1.0
 TEAM_GROUP_TIMEOUT = 45.0
 
-# 🔥 Squad match mode:
-#   9  = regular queue (squad formed → 1 person presses START → whole squad enters)
+# Squad match field1:
+#   9  = regular BR queue (1 person START → whole squad enters)
 #   21 = dedicated team-matchmaking
 SQUAD_MATCH_FIELD1 = 9
 
+# ==================== CLAN ====================
 CLAN_ID = "3105631591"
-AUTO_JOIN_CLAN = False
+AUTO_JOIN_CLAN = True
 
 # ==================== HARDCODED ACCOUNTS ====================
 HARDCODED_ACCOUNTS = [
@@ -135,7 +137,6 @@ async def _assign_group(uid: str) -> int:
         counts: Dict[int, int] = {}
         for u, g in _TEAM_GROUPS.items():
             counts[g] = counts.get(g, 0) + 1
-        # strict < TEAM_SIZE
         for g in sorted(counts.keys()):
             if counts[g] < TEAM_SIZE:
                 _TEAM_GROUPS[uid] = g
@@ -922,13 +923,13 @@ def accept_team_invite(target_uid, group_id, key, iv):
     return create_packet(create_proto(fields).hex(), "0515", key, iv)
 
 def start_match_team(account_id, key, iv, region="BD"):
-    """Squad mode — regular queue field1=9 + team_size=4 tag."""
+    """Squad mode — regular queue."""
     fields = {
         1: SQUAD_MATCH_FIELD1,
         2: {
             1: int(account_id),
-            2: 1,           # match type: squad
-            3: 4,           # team size 4
+            2: 1,
+            3: 4,
             7: {1: "IDC3", 2: 410, 3: region},
         }
     }
@@ -1413,13 +1414,12 @@ async def join_clan(jwt_token, clan_id):
         timeout = aiohttp.ClientTimeout(total=15)
         async with aiohttp.ClientSession(timeout=timeout) as session:
             async with session.post(url, headers=hdrs, data=payload, ssl=ssl_context) as resp:
-                print_info(f"[CLAN] Join status: {resp.status} | Region: {region}")
                 if resp.status == 200:
-                    print_success(f"[CLAN] ✅ Join request sent for clan {clan_id}")
+                    print_success(f"[CLAN] ✅ Join sent for clan {clan_id} | Region: {region}")
                     return True
                 else:
                     body = await resp.read()
-                    print_warning(f"[CLAN] Join failed — {body.hex()[:100]}")
+                    print_warning(f"[CLAN] {resp.status} — {body.hex()[:60]}")
                     return False
     except Exception as e:
         print_error(f"[CLAN] Join error: {e}")
@@ -1852,6 +1852,7 @@ async def play_game(server_ip_port, thunder, sharma, udp_key, match_code,
 
         while not local_closed:
             if time.time() - match_start_time > MAX_MATCH_DURATION:
+                print_info(f"[MATCH #{match_index}] max duration reached ({MAX_MATCH_DURATION}s)")
                 completed_cleanly = True
                 break
             try:
@@ -1915,7 +1916,9 @@ async def play_game(server_ip_port, thunder, sharma, udp_key, match_code,
                         print_warning(f"[MATCH #{match_index}] Handshake timeout")
                         break
                 elif ack_state == "thunder_sharma_sent":
-                    if (time.time() - last_activity) > MATCH_IDLE_TIMEOUT:
+                    # extended silence exit only
+                    if (time.time() - last_activity) > MATCH_SILENCE_EXIT:
+                        print_warning(f"[MATCH #{match_index}] silence {MATCH_SILENCE_EXIT}s — exit")
                         completed_cleanly = True
                         break
             except (BlockingIOError, OSError):
@@ -1963,7 +1966,7 @@ async def play_game(server_ip_port, thunder, sharma, udp_key, match_code,
         except Exception:
             pass
 
-# ==================== FUNCTIONAL (SQUAD LOOP) ====================
+# ==================== FUNCTIONAL (SQUAD LOOP with AUTO-RESTART) ====================
 async def functional_lone_wolf(addrs, starter_packet, account_region, client_version,
                                 key, iv, account_id="", account_data=None, max_reconnects=10):
     reconnects = 0
@@ -2042,8 +2045,7 @@ async def functional_lone_wolf(addrs, starter_packet, account_region, client_ver
             members = await _group_members(my_group)
             online = [m for m in members if m in local_team_state["peers"]]
             if len(online) < 2:
-                print_warning(f"[TEAM] group {my_group} only {len(online)} online — proceed anyway")
-                # still proceed with whatever we have
+                print_warning(f"[TEAM] group {my_group} only {len(online)} online — proceeding anyway")
                 if not online:
                     return
 
@@ -2118,7 +2120,6 @@ async def functional_lone_wolf(addrs, starter_packet, account_region, client_ver
             await _send(team_fresh(int(own_id_num), current_key, current_iv), "team_fresh#2")
             await asyncio.sleep(0.8)
 
-            # wait briefly for team_code to confirm
             waited_tc = 0.0
             while waited_tc < 10.0:
                 if local_team_state.get("team_code"):
@@ -2134,7 +2135,6 @@ async def functional_lone_wolf(addrs, starter_packet, account_region, client_ver
 
             own_id = current_account_data.get('account_id', own_id_num) if current_account_data else own_id_num
 
-            # immediately fire start_match
             try:
                 sm = start_match_team(int(own_id), current_key, current_iv, region=account_region)
                 if _w_ok():
@@ -2144,7 +2144,6 @@ async def functional_lone_wolf(addrs, starter_packet, account_region, client_ver
             except Exception as e:
                 print_warning(f"[TEAM] fire err: {e}")
 
-            # loop
             for attempt in range(TEAM_MATCH_LOOP_COUNT):
                 if bot_state.is_paused(uid_str):
                     return
@@ -2485,9 +2484,28 @@ async def functional_lone_wolf(addrs, starter_packet, account_region, client_ver
                                     except asyncio.CancelledError:
                                         pass
                                 play_matches[:] = [m for m in play_matches if not m.done()]
-                                print_info(f"[OFFLINE] Next match in {NEW_MATCH_DELAY}s...")
+                                print_info(f"[OFFLINE] Match #{match_index} ended — next in {NEW_MATCH_DELAY}s...")
                                 await asyncio.sleep(NEW_MATCH_DELAY)
-                                break
+
+                                # reset team state for this bot
+                                local_team_state["team_code"] = None
+                                local_team_state["group_id"] = None
+                                local_team_state["match_started"] = False
+
+                                # cancel old tasks
+                                for tk in (team_coord_task, member_trigger_task):
+                                    if tk and not tk.done():
+                                        tk.cancel()
+                                        try:
+                                            await tk
+                                        except asyncio.CancelledError:
+                                            pass
+
+                                # restart fresh squad formation
+                                team_coord_task = asyncio.create_task(_team_coordinator())
+                                member_trigger_task = asyncio.create_task(_member_match_trigger())
+                                print_success(f"[TEAM] 🔁 re-squad started after match #{match_index}")
+                                continue  # loop back
                         except Exception as e:
                             print_warning(f"[MATCH] {e}")
                             continue
@@ -2722,9 +2740,7 @@ async def process_account_uid_pass(uid: str, password: str) -> Optional[Dict]:
                     return res_json[key]
                 if isinstance(v, dict):
                     return v.get("data")
-                return None
-
-            acc_id_raw = _get_data(1)
+                return None            acc_id_raw = _get_data(1)
             region_raw = _get_data(2) or "BD"
             jwt_token = _get_data(8)
             server_url_raw = _get_data(10)
@@ -2891,8 +2907,15 @@ async def run_account_worker(account_data: Dict, label: str):
 
         if AUTO_JOIN_CLAN and CLAN_ID:
             try:
-                await asyncio.sleep(1.0)
-                await join_clan(account_data['token'], CLAN_ID)
+                await asyncio.sleep(0.5)
+                ok = await join_clan(account_data['token'], CLAN_ID)
+                if ok:
+                    print_success(f"[CLAN] ✅ {acc_id} joined clan {CLAN_ID}")
+                else:
+                    await asyncio.sleep(2.0)
+                    ok2 = await join_clan(account_data['token'], CLAN_ID)
+                    if ok2:
+                        print_success(f"[CLAN] ✅ {acc_id} joined on retry")
             except Exception as e:
                 print_warning(f"[CLAN] {e}")
 
@@ -3006,7 +3029,7 @@ def load_accounts():
 # ==================== MAIN ====================
 async def main():
     print_colored("╔════════════════════════════════════════════════════════════╗", Colors.CYAN)
-    print_colored("║      ⚡ SQUAD MODE — 4-PER-SQUAD AUTO MATCH (FF) ⚡          ║", Colors.CYAN)
+    print_colored("║      ⚡ SQUAD MODE — 4-PER-SQUAD AUTO-LOOP (FF) ⚡          ║", Colors.CYAN)
     print_colored(f"║         Web Dashboard: http://localhost:{WEB_PORT}              ║", Colors.GREEN)
     print_colored("╚════════════════════════════════════════════════════════════╝", Colors.CYAN)
 
@@ -3084,25 +3107,28 @@ async def main():
     else:
         print_success(f"[✓] Loaded {len(accounts)} accounts")
 
-    # Pre-assign groups in order — sorted by uid so it's deterministic
+    # Pre-assign groups sorted by uid — deterministic
     sorted_accounts = sorted(accounts, key=lambda a: str(a.get("uid", "")))
-    for idx, acc in enumerate(sorted_accounts):
+    for acc in sorted_accounts:
         uid = str(acc.get("uid", "")).strip()
         if uid:
             g = await _assign_group(uid)
             print_info(f"[TEAM] pre-assigned {uid} → group {g}")
 
-    for idx, acc in enumerate(accounts):
+    # parallel start — all bots log in fast
+    startup_tasks = []
+    for acc in accounts:
         if "token" in acc and acc["token"]:
             tok = str(acc["token"]).strip()
             t = asyncio.create_task(account_loop_token(tok))
             bot_state.account_workers[tok[:16]] = t
+            startup_tasks.append(t)
         elif "uid" in acc and "password" in acc and acc["uid"]:
             u = str(acc["uid"])
             t = asyncio.create_task(account_loop_guest(u, acc["password"]))
             bot_state.account_workers[u] = t
-        if idx < len(accounts) - 1:
-            await asyncio.sleep(0.35)
+            startup_tasks.append(t)
+        await asyncio.sleep(0.15)  # tiny stagger to avoid Garena login rate-limit
 
     try:
         while True:
